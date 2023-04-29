@@ -7,6 +7,7 @@ import time
 
 class Sudoku:
     """Class for managing the sudoku instance"""
+
     def __init__(self) -> None:
         self.reset()
 
@@ -61,15 +62,14 @@ class Sudoku:
             print("Invalid difficulty", file=sys.stderr)
             return 0
         return empty_cells[difficulty]
-    
-    
+
     def generate(self, difficulty):
         """Generates a brand-new (random) sudoku."""
-        self.reset() # reset values
+        self.reset()  # reset values
 
         # generate diagonal values
-        for i in range(0, 9, 3): # 0, 3, 6
-            square = list(range(1, 10)) # list from 1 to 9
+        for i in range(0, 9, 3):  # 0, 3, 6
+            square = list(range(1, 10))  # list from 1 to 9
             random.shuffle(square)
             for r in range(3):
                 for c in range(3):
@@ -77,7 +77,7 @@ class Sudoku:
 
         # get the first solution
         for _ in self.solve():
-            break # we only need one solution
+            break  # we only need one solution
 
         # get the amount of empty cells we need, corresponding to the difficulty the user wants
         empty_cells = self.evaluate(difficulty)
@@ -90,17 +90,17 @@ class Sudoku:
         while empty_cells > 0 and len(unvisited) > 0:
             # get random coordinates
             r, c = unvisited.pop()
-            copy = self.board[r][c] # save a copy of the value
-            self.board[r][c] = 0 # remove the cell value
+            copy = self.board[r][c]  # save a copy of the value
+            self.board[r][c] = 0  # remove the cell value
 
             # check if there is still only one solution
             solutions = list(self.solve())
 
             # we don't want a sudoku with multiple solutions
             if len(solutions) > 1:
-                self.board[r][c] = copy # restore value
+                self.board[r][c] = copy  # restore value
             else:
-                empty_cells -= 1 # we successfully removed a cell value
+                empty_cells -= 1  # we successfully removed a cell value
 
         # check if we could find a sudoku with the given amount of empty cells, or if all cells
         # were tried without success
@@ -113,6 +113,7 @@ class Sudoku:
 DEFAULT_DIFFICULTY = 3
 DEFAULT_TIMEOUT = 600
 
+
 def main():
     """Function called when 'main.py' is executed"""
     args = [int(x) if x.isdecimal() else x for x in sys.argv[1:]]
@@ -120,7 +121,7 @@ def main():
     timeout = args[1] if len(args) > 1 else DEFAULT_TIMEOUT
     print(f"Generating sudoku with difficulty {difficulty}... (timeout: {timeout}s)")
     sudoku = Sudoku()
-    
+
     start_time = time.time()
     end_time = start_time + timeout
     while time.time() < end_time:
