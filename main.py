@@ -1,5 +1,6 @@
 """Main file for sudoku generator"""
 
+from datetime import datetime
 import random
 import sys
 import time
@@ -110,26 +111,84 @@ class Sudoku:
         return True
 
 
+    def to_svg(self, cell_size=40, line_color="black"):
+        """Generate svg data containing a drawn sudoku board with the current field values."""
+
+        # header
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">'
+        # simple white rectangle
+        svg += f'<rect x="0" y="0" width="{9 * cell_size}" height="{9 * cell_size}" fill="white" />'
+
+        # grid lines
+        for i in range(10):
+            line_width = 2 if i % 3 == 0 else 0.5
+            # row lines
+            svg += f'<line x1="{i * cell_size}" y1="0"  x2="{i * cell_size}" y2="{9 * cell_size}" \
+                            style="stroke:{line_color}; stroke-width:{line_width}" />'
+            # column lines
+            svg += f'<line x1="0" y1="{i * cell_size}"  x2="{9 * cell_size}" y2="{i * cell_size}" \
+                            style="stroke:{line_color}; stroke-width:{line_width}" />'
+
+        # numbers
+        for row in range(9):
+            for column in range(9):
+                if self.board[row][column] != 0:
+                    svg += f'<text x="{(column + 0.5) * cell_size}" y="{(row + 0.5) * cell_size}" \
+                        style="font-size:20; text-anchor:middle; dominant-baseline:middle"> {str(self.board[row][column])} </text>'
+
+        svg += '</svg>' # ending
+        return svg
+
+
 DEFAULT_DIFFICULTY = 3
 DEFAULT_TIMEOUT = 600
 
 
 def main():
     """Function called when 'main.py' is executed"""
+    # parse console arguments
     args = [int(x) if x.isdecimal() else x for x in sys.argv[1:]]
+    if "--help" in args:
+        print("Python script for generating a sudoku (and exporting it to .svg)")
+        print(f"Usage: {' '.join(sys.argv[:1])} DIFFICULTY TIMEOUT [--export]")
+        print("- DIFFICULTY: integer number between 1 and 6 (5 and 6 may take a very long time to generate)")
+        print("- TIMEOUT: the maximum time in seconds to spend retrying when no solveable sudoku was found")
+        print("- Use '--export' to enable exporting the generated sudoku to a .svg file.")
+        sys.exit(0)
+
+    export = False
+    if "--export" in args:
+        export = True
+        args.remove("--export")
     difficulty = args[0] if len(args) > 0 else DEFAULT_DIFFICULTY
     timeout = args[1] if len(args) > 1 else DEFAULT_TIMEOUT
-    print(f"Generating sudoku with difficulty {difficulty}... (timeout: {timeout}s)")
+    print(f"Generating sudoku with difficulty {difficulty}...")
+    print(f"Will retry for {timeout}s on failure.")
+    if export:
+        now = datetime.now()
+        file_name = f"sudoku-{now:%Y%m%dT%H%M%S}-{difficulty}.svg"
+        print(f"Sudoku will be exported to {file_name}")
+
+    # create Sudoku instance
     sudoku = Sudoku()
 
-    start_time = time.time()
-    end_time = start_time + timeout
-    while time.time() < end_time:
+    end_time = time.time() + timeout
+    while time.time() < end_time: # Retry until timeout occurs or solveable sudoku was found
         if sudoku.generate(difficulty):
-            sudoku.print()
+            if export:
+                # User wants us to export the sudoku.
+                # Save it to a .svg file with the file name containing the current date, time and the difficulty
+                print("Sudoku found. Exporting... ", end = '')
+                data = sudoku.to_svg()
+                with open(file_name, 'w', encoding="utf-8") as file:
+                    file.write(data)
+                print("✓")
+            else:
+                # User doesn't want us to export the sudoku. Just print it to the console.
+                print("Sudoku found:")
+                sudoku.print()
             break
-        else:
-            sudoku.reset()
+        sudoku.reset()
 
 
 if __name__ == "__main__":
