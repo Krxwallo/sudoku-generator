@@ -1,6 +1,8 @@
 """Main file for sudoku generator"""
 
+import random
 import sys
+import time
 
 
 class Sudoku:
@@ -17,7 +19,7 @@ class Sudoku:
     def print(self):
         """Prints the current state of the sudoku to std out - empty fields are represented by '.'"""
         for i in range(9):
-            print(" ".join([str(x)if x != 0 else "." for x in self.board[i]]))
+            print(" ".join([str(x) if x != 0 else "." for x in self.board[i]]))
 
     def number_is_valid(self, row, column, num):
         """Checks if [num] is already in the specified [row], [column] or in the box"""
@@ -59,13 +61,74 @@ class Sudoku:
             print("Invalid difficulty", file=sys.stderr)
             return 0
         return empty_cells[difficulty]
+    
+    
+    def generate(self, difficulty):
+        """Generates a brand-new (random) sudoku."""
+        self.reset() # reset values
 
+        # generate diagonal values
+        for i in range(0, 9, 3): # 0, 3, 6
+            square = list(range(1, 10)) # list from 1 to 9
+            random.shuffle(square)
+            for r in range(3):
+                for c in range(3):
+                    self.board[r + i][c + i] = square.pop()
+
+        # get the first solution
+        for _ in self.solve():
+            break # we only need one solution
+
+        # get the amount of empty cells we need, corresponding to the difficulty the user wants
+        empty_cells = self.evaluate(difficulty)
+
+        # remove cells
+        # create a random list of all fields
+        unvisited = [(r, c) for r in range(9) for c in range(9)]
+        random.shuffle(unvisited)
+
+        while empty_cells > 0 and len(unvisited) > 0:
+            # get random coordinates
+            r, c = unvisited.pop()
+            copy = self.board[r][c] # save a copy of the value
+            self.board[r][c] = 0 # remove the cell value
+
+            # check if there is still only one solution
+            solutions = list(self.solve())
+
+            # we don't want a sudoku with multiple solutions
+            if len(solutions) > 1:
+                self.board[r][c] = copy # restore value
+            else:
+                empty_cells -= 1 # we successfully removed a cell value
+
+        # check if we could find a sudoku with the given amount of empty cells, or if all cells
+        # were tried without success
+        if empty_cells > 0:
+            print("No solveable sudoku found. Retrying...")
+            return False
+        return True
+
+
+DEFAULT_DIFFICULTY = 3
+DEFAULT_TIMEOUT = 600
 
 def main():
     """Function called when 'main.py' is executed"""
-    print("Generating sudoku...")
+    args = [int(x) if x.isdecimal() else x for x in sys.argv[1:]]
+    difficulty = args[0] if len(args) > 0 else DEFAULT_DIFFICULTY
+    timeout = args[1] if len(args) > 1 else DEFAULT_TIMEOUT
+    print(f"Generating sudoku with difficulty {difficulty}... (timeout: {timeout}s)")
     sudoku = Sudoku()
-    sudoku.print()
+    
+    start_time = time.time()
+    end_time = start_time + timeout
+    while time.time() < end_time:
+        if sudoku.generate(difficulty):
+            sudoku.print()
+            break
+        else:
+            sudoku.reset()
 
 
 if __name__ == "__main__":
