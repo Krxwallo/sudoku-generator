@@ -27,7 +27,9 @@ class Sudoku:
                 return False
 
         # check the box
-        start_row, start_column = Sudoku.get_box_start(row, column)
+        # -> get start coordinates ('//' is integer division in python)
+        start_row = row // 3 * 3
+        start_column = column // 3 * 3
         for i in range(3):
             for j in range(3):
                 if self.board[i + start_row][j + start_column] == num:
@@ -57,12 +59,6 @@ class Sudoku:
             print("Invalid difficulty", file=sys.stderr)
             return 0
         return empty_cells[difficulty]
-
-
-    @staticmethod
-    def get_box_start(row, column):
-        """Get the start coordinates of a box from the given [row] and [column] of a field"""
-        return (row - (row % 3), column - (column % 3))
 
 
 def main():
