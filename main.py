@@ -5,6 +5,8 @@ import random
 import sys
 import time
 
+from progress_bar import print_progress
+
 
 class Sudoku:
     """Class for managing the sudoku instance"""
@@ -82,6 +84,7 @@ class Sudoku:
 
         # get the amount of empty cells we need, corresponding to the difficulty the user wants
         empty_cells = self.evaluate(difficulty)
+        start_empty_cells = empty_cells
 
         # remove cells
         # create a random list of all fields
@@ -89,6 +92,8 @@ class Sudoku:
         random.shuffle(unvisited)
 
         while empty_cells > 0 and len(unvisited) > 0:
+            print_progress(start_empty_cells-empty_cells, start_empty_cells)
+
             # get random coordinates
             r, c = unvisited.pop()
             copy = self.board[r][c]  # save a copy of the value
@@ -107,7 +112,8 @@ class Sudoku:
         # were tried without success
         if empty_cells > 0:
             print("No solveable sudoku found. Retrying...")
-            return False
+            return 
+        print("\n") # new line after progress bar
         return True
 
 
