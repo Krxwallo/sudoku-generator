@@ -21,7 +21,10 @@ class Sudoku:
         self.board = [[0 for j in range(columns)] for i in range(rows)]
 
     def print(self):
-        """Prints the current state of the sudoku to std out - empty fields are represented by '.'"""
+        """
+        Prints the current state of the sudoku to std out.
+        Empty fields are represented by '.'
+        """
         for i in range(9):
             print(" ".join([str(x) if x != 0 else "." for x in self.board[i]]))
 
@@ -92,7 +95,6 @@ class Sudoku:
         random.shuffle(unvisited)
 
         while empty_cells > 0 and len(unvisited) > 0:
-            print_progress(start_empty_cells-empty_cells, start_empty_cells)
 
             # get random coordinates
             r, c = unvisited.pop()
@@ -108,14 +110,14 @@ class Sudoku:
             else:
                 empty_cells -= 1  # we successfully removed a cell value
 
+            print_progress(start_empty_cells-empty_cells, start_empty_cells, prefix = 'Generating...')
+
         # check if we could find a sudoku with the given amount of empty cells, or if all cells
         # were tried without success
         if empty_cells > 0:
             print("No solveable sudoku found. Retrying...")
-            return 
-        print("\n") # new line after progress bar
+            return False
         return True
-
 
     def to_svg(self, cell_size=40, line_color="black"):
         """Generate svg data containing a drawn sudoku board with the current field values."""
@@ -140,9 +142,10 @@ class Sudoku:
             for column in range(9):
                 if self.board[row][column] != 0:
                     svg += f'<text x="{(column + 0.5) * cell_size}" y="{(row + 0.5) * cell_size}" \
-                        style="font-size:20; text-anchor:middle; dominant-baseline:middle"> {str(self.board[row][column])} </text>'
+                        style="font-size:20; text-anchor:middle; dominant-baseline:middle"> \
+                            {str(self.board[row][column])} </text>'
 
-        svg += '</svg>' # ending
+        svg += '</svg>'  # ending
         return svg
 
 
@@ -168,7 +171,7 @@ def main():
         args.remove("--export")
     difficulty = args[0] if len(args) > 0 else DEFAULT_DIFFICULTY
     timeout = args[1] if len(args) > 1 else DEFAULT_TIMEOUT
-    print(f"Generating sudoku with difficulty {difficulty}...")
+    print(f"Generating sudoku with difficulty {difficulty}.")
     print(f"Will retry for {timeout}s on failure.")
     if export:
         now = datetime.now()
@@ -179,12 +182,12 @@ def main():
     sudoku = Sudoku()
 
     end_time = time.time() + timeout
-    while time.time() < end_time: # Retry until timeout occurs or solveable sudoku was found
+    while time.time() < end_time:  # Retry until timeout occurs or solveable sudoku was found
         if sudoku.generate(difficulty):
             if export:
                 # User wants us to export the sudoku.
                 # Save it to a .svg file with the file name containing the current date, time and the difficulty
-                print("Sudoku found. Exporting... ", end = '')
+                print("Sudoku found. Exporting... ", end='')
                 data = sudoku.to_svg()
                 with open(file_name, 'w', encoding="utf-8") as file:
                     file.write(data)

@@ -1,4 +1,6 @@
 """
+Progress bar helper file
+
 From https://gist.github.com/aubricus/f91fb55dc6ba5557fbab06119420dd6a
 
 Copyright 2020 Aubrey Taylor
